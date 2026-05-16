@@ -1,0 +1,15 @@
+{
+	"name": "spotify-adfactory",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Enabled",
+			"editable": true
+		}
+	},
+	"location": "westus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "7cfb1007-09b2-4b2a-858c-4ef1d1bab134",
+		"tenantId": "b40dbee1-7b8d-4b3d-b21e-69b5119cd30b"
+	}
+}
