@@ -31,7 +31,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT * FROM  @{pipeline().parameters.schema}.@{pipeline().parameters.table} WHERE @{pipeline().parameters.cdc_col} > '@{activity('last_cdc').output.firstRow.cdc}'",
+							"value": "SELECT * FROM @{pipeline().parameters.schema}.@{pipeline().parameters.table} WHERE @{pipeline().parameters.cdc_col} > '@{activity('last_cdc').output.firstRow.cdc}'",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -49,90 +49,6 @@
 					"enableStaging": false,
 					"translator": {
 						"type": "TabularTranslator",
-						"mappings": [
-							{
-								"source": {
-									"name": "user_id",
-									"type": "Int32",
-									"physicalType": "int"
-								},
-								"sink": {
-									"name": "user_id",
-									"type": "Int32",
-									"physicalType": "INT_32"
-								}
-							},
-							{
-								"source": {
-									"name": "user_name",
-									"type": "String",
-									"physicalType": "varchar"
-								},
-								"sink": {
-									"name": "user_name",
-									"type": "String",
-									"physicalType": "UTF8"
-								}
-							},
-							{
-								"source": {
-									"name": "country",
-									"type": "String",
-									"physicalType": "varchar"
-								},
-								"sink": {
-									"name": "country",
-									"type": "String",
-									"physicalType": "UTF8"
-								}
-							},
-							{
-								"source": {
-									"name": "subscription_type",
-									"type": "String",
-									"physicalType": "varchar"
-								},
-								"sink": {
-									"name": "subscription_type",
-									"type": "String",
-									"physicalType": "UTF8"
-								}
-							},
-							{
-								"source": {
-									"name": "start_date",
-									"type": "Date",
-									"physicalType": "date"
-								},
-								"sink": {
-									"name": "start_date",
-									"type": "Date"
-								}
-							},
-							{
-								"source": {
-									"name": "end_date",
-									"type": "Date",
-									"physicalType": "date"
-								},
-								"sink": {
-									"name": "end_date",
-									"type": "Date"
-								}
-							},
-							{
-								"source": {
-									"name": "updated_at",
-									"type": "DateTime",
-									"physicalType": "datetime"
-								},
-								"sink": {
-									"name": "updated_at",
-									"type": "DateTime",
-									"physicalType": "INT_96"
-								}
-							}
-						],
 						"typeConversion": true,
 						"typeConversionSettings": {
 							"allowDataTruncation": true,
@@ -177,7 +93,7 @@
 					"source": {
 						"type": "JsonSource",
 						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
+							"type": "AzureBlobFSWriteSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
 						},
@@ -193,7 +109,8 @@
 							"folder": "cdc",
 							"file": "cdc.json"
 						}
-					}
+					},
+					"firstRowOnly": true
 				}
 			},
 			{
@@ -234,24 +151,13 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "JsonSource",
-						"additionalColumns": [
-							{
-								"name": "cdc",
-								"value": {
-									"value": "@activity('max_cdc').output.resultSets[0].rows[0].cdc",
-									"type": "Expression"
-								}
-							}
-						],
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"enablePartitionDiscovery": false
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT '@{activity('max_cdc').output.resultSets[0].rows[0].cdc}' AS cdc",
+							"type": "Expression"
 						},
-						"formatSettings": {
-							"type": "JsonReadSettings"
-						}
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
 					},
 					"sink": {
 						"type": "JsonSink",
@@ -266,13 +172,8 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "Json_dynamic",
-						"type": "DatasetReference",
-						"parameters": {
-							"container": "bronze",
-							"folder": "cdc",
-							"file": "empty.json"
-						}
+						"referenceName": "Azure_Sql",
+						"type": "DatasetReference"
 					}
 				],
 				"outputs": [
